@@ -101,20 +101,21 @@
     flex: 1;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: stretch;
     padding-bottom: 4px;
     overflow: hidden;
+    gap: 8px;
   }
 
-  /* 3列（百/十/一） */
+  /* 3位グループ（百/十/一） */
   .placeGroup {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
     flex: 1;
-    max-width: 110px;
-    height: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
   .placeLabel {
     font-size: 0.8rem;
@@ -125,19 +126,25 @@
     padding: 3px 10px;
     flex-shrink: 0;
   }
-  .coinStack {
+  /* 2列コインエリア */
+  .coinCols {
     flex: 1;
     width: 100%;
     display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    justify-content: flex-start;
+    flex-direction: row;
+    align-items: flex-end;
     gap: 2px;
     overflow: hidden;
   }
+  .coinCol {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 2px;
+  }
   .coinImg {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
     object-fit: contain;
     user-select: none;
     pointer-events: none;
@@ -251,17 +258,26 @@
 <div id="childArea">
   <div id="problemLabel">なんえん？</div>
   <div id="coinArea">
-    <div class="placeGroup" id="g100">
+    <div class="placeGroup">
       <div class="placeLabel">100円</div>
-      <div class="coinStack" id="stack100"></div>
+      <div class="coinCols">
+        <div class="coinCol" id="stack100L"></div>
+        <div class="coinCol" id="stack100R"></div>
+      </div>
     </div>
-    <div class="placeGroup" id="g10">
+    <div class="placeGroup">
       <div class="placeLabel">10円</div>
-      <div class="coinStack" id="stack10"></div>
+      <div class="coinCols">
+        <div class="coinCol" id="stack10L"></div>
+        <div class="coinCol" id="stack10R"></div>
+      </div>
     </div>
-    <div class="placeGroup" id="g1">
+    <div class="placeGroup">
       <div class="placeLabel">1円</div>
-      <div class="coinStack" id="stack1"></div>
+      <div class="coinCols">
+        <div class="coinCol" id="stack1L"></div>
+        <div class="coinCol" id="stack1R"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -292,20 +308,31 @@
     const h = Math.floor(n / 100);
     const t = Math.floor((n % 100) / 10);
     const o = n % 10;
-    fillStack('stack100', h, 'money_100.png');
-    fillStack('stack10',  t, 'money_10.png');
-    fillStack('stack1',   o, 'money_1.png');
+    fillTwoCols('stack100L', 'stack100R', h, 'money_100.png');
+    fillTwoCols('stack10L',  'stack10R',  t, 'money_10.png');
+    fillTwoCols('stack1L',   'stack1R',   o, 'money_1.png');
   }
 
-  function fillStack(id, count, img) {
-    const el = document.getElementById(id);
-    el.innerHTML = '';
-    for (let i = 0; i < count; i++) {
-      const coin = document.createElement('img');
-      coin.src = img;
-      coin.className = 'coinImg';
-      el.appendChild(coin);
+  function fillTwoCols(leftId, rightId, count, img) {
+    const left  = document.getElementById(leftId);
+    const right = document.getElementById(rightId);
+    left.innerHTML = '';
+    right.innerHTML = '';
+    const leftCount  = Math.min(count, 5);
+    const rightCount = Math.max(count - 5, 0);
+    for (let i = 0; i < leftCount; i++) {
+      left.appendChild(makeCoin(img));
     }
+    for (let i = 0; i < rightCount; i++) {
+      right.appendChild(makeCoin(img));
+    }
+  }
+
+  function makeCoin(img) {
+    const el = document.createElement('img');
+    el.src = img;
+    el.className = 'coinImg';
+    return el;
   }
 
   function judge(correct) {
