@@ -79,6 +79,7 @@
   .levelTitle { font-size: 0.95rem; font-weight: 700; color: #111; }
   .levelDesc { font-size: 0.78rem; color: #777; margin-top: 2px; line-height: 1.4; }
   .levelArrow { color: #ccc; font-size: 1.1rem; }
+  .clearStar { font-size: 1.1rem; flex-shrink: 0; }
 
   /* ===== レベル詳細モーダル ===== */
   #levelModal {
@@ -115,11 +116,11 @@
     background: var(--parent-bg);
     flex: 0 0 20%;
     display: flex; align-items: center; justify-content: center;
-    gap: 16px; padding: 8px 20px;
+    gap: 10px; padding: 8px 12px;
     transform: rotate(180deg);
   }
   .judgeBtn {
-    flex: 1; max-width: 160px; height: 100%;
+    flex: 1; max-width: 140px; height: 100%;
     border: 0; border-radius: 18px; font-size: 2.8rem; font-weight: 900;
     cursor: pointer; transition: transform .1s, opacity .1s;
     display: flex; align-items: center; justify-content: center;
@@ -130,9 +131,16 @@
   .judgeBtn.ng { background: #ef4444; color: #fff; }
   #scoreDisp {
     color: #aaa; font-size: 0.9rem; font-weight: 700;
-    text-align: center; min-width: 56px; line-height: 1.3;
+    text-align: center; min-width: 48px; line-height: 1.3;
   }
   #scoreDisp span { display: block; font-size: 1.5rem; color: #fff; font-weight: 900; }
+  #backBtn {
+    background: rgba(255,255,255,.12); border: 0; border-radius: 12px;
+    color: #ccc; font-size: 0.75rem; font-weight: 700;
+    padding: 8px 10px; cursor: pointer; line-height: 1.3;
+    flex-shrink: 0;
+  }
+  #backBtn:active { background: rgba(255,255,255,.22); }
 
   .divider { height: 4px; background: linear-gradient(90deg, #f59e0b, #ef4444, #3b82f6); }
 
@@ -247,6 +255,7 @@
   <button class="judgeBtn ng" onclick="judge(false)">✕</button>
   <div id="scoreDisp">せいかい<span id="scoreNum">0</span></div>
   <button class="judgeBtn ok" onclick="judge(true)">○</button>
+  <button id="backBtn" onclick="goBack()">もどる</button>
 </div>
 
 <div class="divider"></div>
@@ -414,8 +423,56 @@ function genChampion() {
   return n;
 }
 
+// ===== 効果音（Web Audio合成） =====
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playPinpon() {
+  const ctx = getAudioCtx();
+  const t = ctx.currentTime;
+  // 高い音 → さらに高い音の2音
+  [[880, 0, 0.12], [1320, 0.13, 0.12]].forEach(([freq, delay, dur]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t + delay);
+    gain.gain.setValueAtTime(0.5, t + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + delay + dur);
+    osc.start(t + delay); osc.stop(t + delay + dur + 0.01);
+  });
+}
+function playBubuu() {
+  const ctx = getAudioCtx();
+  const t = ctx.currentTime;
+  // 低い矩形波2連
+  [[180, 0, 0.18], [150, 0.22, 0.22]].forEach(([freq, delay, dur]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t + delay);
+    gain.gain.setValueAtTime(0.25, t + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + delay + dur);
+    osc.start(t + delay); osc.stop(t + delay + dur + 0.01);
+  });
+}
+
+// ===== バッジ（localStorage） =====
+const BADGE_KEY = 'oyako_cleared';
+function getCleared() {
+  try { return JSON.parse(localStorage.getItem(BADGE_KEY) || '[]'); } catch { return []; }
+}
+function setCleared(lv) {
+  const arr = getCleared();
+  if (!arr.includes(lv)) { arr.push(lv); localStorage.setItem(BADGE_KEY, JSON.stringify(arr)); }
+}
+
 // ===== 状態 =====
 let score = 0;
+let streak = 0;
 let currentNum = 0;
 let judging = false;
 let currentLevel = null;
@@ -434,7 +491,9 @@ function hideLevelScreen() {
 function buildLevelList() {
   const list = document.getElementById('levelList');
   list.innerHTML = '';
+  const cleared = getCleared();
   LEVELS.forEach(lv => {
+    const isCleared = cleared.includes(lv.lv);
     const item = document.createElement('div');
     item.className = 'levelItem';
     item.innerHTML = `
@@ -443,7 +502,7 @@ function buildLevelList() {
         <div class="levelTitle">${lv.title}</div>
         <div class="levelDesc">${lv.range}</div>
       </div>
-      <div class="levelArrow">›</div>
+      ${isCleared ? '<div class="clearStar">⭐</div>' : '<div class="levelArrow">›</div>'}
     `;
     item.onclick = () => openLevelModal(lv);
     list.appendChild(item);
@@ -471,9 +530,17 @@ function startFromModal() {
 }
 
 // ===== ゲーム =====
+function goBack() {
+  currentLevel = null;
+  streak = 0;
+  buildLevelList();
+  document.getElementById('levelScreen').classList.add('show');
+}
+
 function startGame(lv) {
   currentLevel = lv;
   score = 0;
+  streak = 0;
   document.getElementById('scoreNum').textContent = '0';
   document.getElementById('levelBadgeGame').textContent =
     lv.lv === 13 ? '🏆 チャンピオン' : `Lv.${lv.lv}　${lv.title}`;
@@ -517,11 +584,19 @@ function judge(correct) {
   judging = true;
   if (correct) {
     score++;
+    streak++;
     document.getElementById('scoreNum').textContent = score;
+    playPinpon();
     showFeedback('⭕️');
     spawnStars();
+    // 10問連続でクリアバッジ（隠し）
+    if (streak >= 10) {
+      setCleared(currentLevel.lv);
+    }
     setTimeout(nextProblem, 900);
   } else {
+    streak = 0;
+    playBubuu();
     showFeedback('❌');
     document.getElementById('coinArea').classList.add('shaking');
     setTimeout(() => {
