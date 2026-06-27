@@ -34,6 +34,18 @@
   #titleScreen h1 { color: #fff; font-size: 1.8rem; font-weight: 950; margin: 0; }
   #titleScreen p { color: #aaa; font-size: 0.95rem; margin: 0; text-align: center; line-height: 1.7; }
   #versionTag { color: #555; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; }
+  #resetBtn { background: none; border: none; color: #444; font-size: 0.75rem; cursor: pointer; padding: 4px 8px; text-decoration: underline; margin-top: 4px; }
+  #resetConfirm {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    display: none; align-items: center; justify-content: center; z-index: 300;
+  }
+  #resetConfirm.show { display: flex; }
+  #resetConfirmBox { background: #1e2436; border-radius: 18px; padding: 28px 24px; text-align: center; max-width: 280px; }
+  #resetConfirmBox p { color: #ccc; font-size: 0.95rem; margin: 0 0 20px; line-height: 1.6; }
+  #resetConfirmBox .rcBtns { display: flex; gap: 10px; justify-content: center; }
+  #resetConfirmBox button { padding: 12px 22px; border-radius: 12px; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; }
+  #rcOk  { background: #ef4444; color: #fff; }
+  #rcCancel { background: #555; color: #fff; }
   #levelSelectBtn {
     background: #f59e0b; color: #fff; border: 0;
     border-radius: 20px; font-size: 1.3rem; font-weight: 950;
@@ -245,7 +257,8 @@
   <h1>👨‍👧 親子でお金</h1>
   <p>コインを見て、いくらか声に出そう。<br>大人は ○ か × を押すだけ。</p>
   <button id="levelSelectBtn" onclick="unlockAudio();playClick();showLevelScreen()">レベルを選ぶ</button>
-  <div id="versionTag">v1.3.0</div>
+  <button id="resetBtn" onclick="showResetConfirm()">全ての記録をリセット</button>
+  <div id="versionTag">v1.4.0</div>
 </div>
 
 <!-- レベル選択画面 -->
@@ -309,6 +322,16 @@
 </div>
 
 <div id="feedback"><div id="feedbackInner"></div></div>
+
+<div id="resetConfirm">
+  <div id="resetConfirmBox">
+    <p>全ての記録をリセットしていいですか？<br>クリアバッジが全て消えます。</p>
+    <div class="rcBtns">
+      <button id="rcOk" onclick="doReset()">リセットする</button>
+      <button id="rcCancel" onclick="hideResetConfirm()">やめる</button>
+    </div>
+  </div>
+</div>
 
 <div id="clearResult">
   <div class="crTitle">🎉 クリア！</div>
@@ -690,6 +713,14 @@ function showClearResult(totalSec) {
     lv.lv === 13 ? '🏆 チャンピオン' : `Lv.${lv.lv}　${lv.title}`;
   document.getElementById('clearResultTime').textContent = totalSec;
   document.getElementById('clearResult').classList.add('show');
+}
+
+function showResetConfirm() { document.getElementById('resetConfirm').classList.add('show'); }
+function hideResetConfirm() { document.getElementById('resetConfirm').classList.remove('show'); }
+function doReset() {
+  localStorage.removeItem(BADGE_KEY);
+  hideResetConfirm();
+  buildLevelList(); // バッジ表示を即更新（レベル選択画面が開いていれば）
 }
 
 function hideClearResult(retry) {
