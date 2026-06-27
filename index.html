@@ -266,7 +266,7 @@
   <p>コインを見て、いくらか声に出そう。<br>大人は ○ か × を押すだけ。</p>
   <button id="levelSelectBtn" onclick="unlockAudio();playClick();showLevelScreen()">レベルを選ぶ</button>
   <button id="resetBtn" onclick="showResetConfirm()">全ての記録をリセット</button>
-  <div id="versionTag">v1.4.0</div>
+  <div id="versionTag">v1.5.0</div>
 </div>
 
 <!-- レベル選択画面 -->
@@ -366,21 +366,21 @@ const LEVELS = [
     title: '20〜50円台・少なめ',
     desc: '十の位・一の位ともに5枚まで。コインが多くなりすぎないよう抑えた設定です。',
     range: '出題範囲：10〜55円（各位5枚まで）',
-    gen: () => makeNum(rand(1,5), rand(0,5))
+    gen: () => weighted(() => makeNum(rand(2,5), rand(0,5)), () => makeNum(rand(1,5), rand(0,5)))
   },
   {
     lv: 3,
     title: '59円まで',
     desc: '十の位は5枚まで、一の位は最大9枚。一の位を読む力を伸ばすステップです。',
     range: '出題範囲：10〜59円',
-    gen: () => makeNum(rand(1,5), rand(0,9))
+    gen: () => weighted(() => makeNum(rand(1,5), rand(6,9)), () => makeNum(rand(1,5), rand(0,9)))
   },
   {
     lv: 4,
     title: '2ケタ完全版',
     desc: '10〜99円を全範囲出題。2ケタのお金を自在に読めるかの総仕上げです。',
     range: '出題範囲：10〜99円',
-    gen: () => makeNum(rand(1,9), rand(0,9))
+    gen: () => weighted(() => makeNum(rand(6,9), rand(0,9)), () => makeNum(rand(1,9), rand(0,9)))
   },
   {
     lv: 5,
@@ -394,55 +394,55 @@ const LEVELS = [
     title: '155円まで・少なめ',
     desc: '100円玉1枚＋各位5枚まで。3ケタに慣れる最初の一歩として、コインの枚数を抑えた設定です。',
     range: '出題範囲：100〜155円（十・一の位は5枚まで）',
-    gen: () => makeNum3(1, rand(0,5), rand(0,5))
+    gen: () => weighted(() => makeNum3(1, rand(2,5), rand(0,5)), () => makeNum3(1, rand(0,5), rand(0,5)))
   },
   {
     lv: 7,
     title: '159円まで',
     desc: '百の位は1固定、十の位は5まで、一の位は最大9枚。3ケタの読みを本格的に練習するステップです。',
     range: '出題範囲：100〜159円',
-    gen: () => makeNum3(1, rand(0,5), rand(0,9))
+    gen: () => weighted(() => makeNum3(1, rand(0,5), rand(6,9)), () => makeNum3(1, rand(0,5), rand(0,9)))
   },
   {
     lv: 8,
     title: '100円台完全版',
     desc: '100〜199円を全範囲出題。百の位が1のお金をすべて読めるかの総仕上げです。',
     range: '出題範囲：100〜199円',
-    gen: () => makeNum3(1, rand(0,9), rand(0,9))
+    gen: () => weighted(() => makeNum3(1, rand(6,9), rand(0,9)), () => makeNum3(1, rand(0,9), rand(0,9)))
   },
   {
     lv: 9,
     title: '何百円台・入門',
     desc: '百の位が1〜9まで変わります。十の位は0か1だけに絞り、百の位の読み方に集中できる設定です。',
     range: '出題範囲：100〜919円（十の位は0か1のみ）',
-    gen: () => makeNum3(rand(1,9), rand(0,1), rand(0,9))
+    gen: () => weighted(() => makeNum3(rand(2,9), rand(0,1), rand(0,9)), () => makeNum3(rand(1,9), rand(0,1), rand(0,9)))
   },
   {
     lv: 10,
     title: '何百円台・少なめ',
     desc: '百の位は1〜9すべて登場。十・一の位は5枚まで抑えてあるので、コインが多くなりすぎません。',
     range: '出題範囲：100〜955円（十・一の位は5枚まで）',
-    gen: () => makeNum3(rand(1,9), rand(0,5), rand(0,5))
+    gen: () => weighted(() => makeNum3(rand(1,9), rand(2,5), rand(0,5)), () => makeNum3(rand(1,9), rand(0,5), rand(0,5)))
   },
   {
     lv: 11,
     title: '何百円台・中級',
     desc: '百の位1〜9、十の位は5まで、一の位は最大9枚。3ケタの読みが本格化するステップです。',
     range: '出題範囲：100〜959円',
-    gen: () => makeNum3(rand(1,9), rand(0,5), rand(0,9))
+    gen: () => weighted(() => makeNum3(rand(1,9), rand(0,5), rand(6,9)), () => makeNum3(rand(1,9), rand(0,5), rand(0,9)))
   },
   {
     lv: 12,
     title: '3ケタ完全版',
     desc: '100〜999円を全範囲出題。3ケタのお金をどれでも読めるかの総仕上げです。',
     range: '出題範囲：100〜999円',
-    gen: () => makeNum3(rand(1,9), rand(0,9), rand(0,9))
+    gen: () => weighted(() => makeNum3(rand(1,9), rand(6,9), rand(0,9)), () => makeNum3(rand(1,9), rand(0,9), rand(0,9)))
   },
   {
     lv: 13,
     title: '🏆 チャンピオン',
-    desc: '1〜999円をランダム出題。さっき「何百円」だったと思ったら次は「何円」、その次はコインがたくさん…という変化球が連続する上級編です。',
-    range: '出題範囲：1〜999円（全範囲・バラバラ出題）',
+    desc: '100〜999円をランダム出題。百の位・十の位・一の位がそれぞれバラバラに変わるので、毎問コインの組み合わせがガラッと変わる3ケタ読みの総仕上げ・上級編です。',
+    range: '出題範囲：100〜999円（3ケタ全範囲・バラバラ出題）',
     gen: () => genChampion()
   },
 ];
@@ -460,27 +460,24 @@ function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function makeNum(tens, ones) { return tens * 10 + ones; }
 function makeNum3(h, t, o) { return h * 100 + t * 10 + o; }
 
-let champPrev = -1;
+// そのレベルで「初めて出てくる帯（新しい問題）」を多めに出すためのヘルパー。
+// 既定で約80%は new（新しい帯）、20%だけ full（全範囲）で復習も混ぜる。
+function weighted(newGen, fullGen, p = 0.8) {
+  return Math.random() < p ? newGen() : fullGen();
+}
+
+let champPrevH = -1;
 function genChampion() {
-  // 前回と桁が変わりやすくなるよう重み付き選択
-  const pools = [
-    range(1,9),          // 1ケタ
-    range(10,99),        // 2ケタ
-    range(100,999),      // 3ケタ
-  ];
-  // 前回の桁を判定
-  const prevDigit = champPrev < 10 ? 0 : champPrev < 100 ? 1 : 2;
-  // 違う桁を選びやすくする（70%で違う桁）
-  let pool;
-  if (Math.random() < 0.7) {
-    const others = [0,1,2].filter(i => i !== prevDigit);
-    pool = pools[pick(others)];
+  // チャンピオンは3ケタ(100〜999円)のみ。1ケタ・2ケタは出さない。
+  // 百の位が前回と変わりやすいようにして「変化球」感を出す（70%で違う百の位）。
+  let h;
+  if (Math.random() < 0.7 && champPrevH >= 1) {
+    do { h = rand(1,9); } while (h === champPrevH);
   } else {
-    pool = pools[rand(0,2)];
+    h = rand(1,9);
   }
-  const n = pick(pool);
-  champPrev = n;
-  return n;
+  champPrevH = h;
+  return makeNum3(h, rand(0,9), rand(0,9));
 }
 
 // ===== 効果音（Web Audio + 事前デコード方式） =====
@@ -627,7 +624,7 @@ function startGame(lv) {
   document.getElementById('scoreNum').textContent = '0';
   document.getElementById('levelBadgeGame').textContent =
     lv.lv === 13 ? '🏆 チャンピオン' : `Lv.${lv.lv}　${lv.title}`;
-  champPrev = -1;
+  champPrevH = -1;
   streakStartTime = 0;
   nextProblem();
 }
