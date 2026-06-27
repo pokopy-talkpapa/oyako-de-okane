@@ -223,10 +223,10 @@
 <body>
 
 <!-- タイトル画面 -->
-<div id="titleScreen">
+<div id="titleScreen" ontouchstart="unlockAudio()" onmousedown="unlockAudio()">
   <h1>👨‍👧 親子でお金</h1>
   <p>コインを見て、いくらか声に出そう。<br>大人は ○ か × を押すだけ。</p>
-  <button id="levelSelectBtn" onclick="playClick();showLevelScreen()">レベルを選ぶ</button>
+  <button id="levelSelectBtn" onclick="unlockAudio();playClick();showLevelScreen()">レベルを選ぶ</button>
 </div>
 
 <!-- レベル選択画面 -->
@@ -425,21 +425,28 @@ function genChampion() {
 
 // ===== 効果音（Web Audio合成） =====
 let audioCtx = null;
+let audioReady = false;
 
-function getAudioCtx() {
+// ページロード時にコンテキストだけ作る（まだ suspended でOK）
+function initAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
 }
 
-async function resumeAudio() {
-  const ctx = getAudioCtx();
-  if (ctx.state === 'suspended') await ctx.resume();
-  return ctx;
+// 最初のタップ時に一度だけ resume → 以降は即再生
+function unlockAudio() {
+  if (audioReady) return;
+  initAudioCtx();
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().then(() => { audioReady = true; });
+  } else {
+    audioReady = true;
+  }
 }
 
 // ピンポーン：明るい2音チャイム
-async function playPinpon() {
-  const ctx = await resumeAudio();
+function playPinpon() {
+  if (!audioReady) return;
+  const ctx = audioCtx;
   const t = ctx.currentTime;
 
   // 1音・2音を同じロジックで生成
@@ -467,8 +474,9 @@ async function playPinpon() {
 }
 
 // ブブー：太い2連バズ
-async function playBubuu() {
-  const ctx = await resumeAudio();
+function playBubuu() {
+  if (!audioReady) return;
+  const ctx = audioCtx;
   const t = ctx.currentTime;
 
   function buzz(startDelay, freq, dur) {
@@ -491,8 +499,9 @@ async function playBubuu() {
 }
 
 // コイン音：ボタンタップ時の軽いクリック
-async function playClick() {
-  const ctx = await resumeAudio();
+function playClick() {
+  if (!audioReady) return;
+  const ctx = audioCtx;
   const t = ctx.currentTime;
   const buf = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate);
   const data = buf.getChannelData(0);
@@ -681,6 +690,7 @@ function spawnStars() {
 }
 
 buildLevelList();
+initAudioCtx();
 </script>
 </body>
 </html>
