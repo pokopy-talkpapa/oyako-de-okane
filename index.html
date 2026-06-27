@@ -33,6 +33,7 @@
   }
   #titleScreen h1 { color: #fff; font-size: 1.8rem; font-weight: 950; margin: 0; }
   #titleScreen p { color: #aaa; font-size: 0.95rem; margin: 0; text-align: center; line-height: 1.7; }
+  #versionTag { color: #555; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; }
   #levelSelectBtn {
     background: #f59e0b; color: #fff; border: 0;
     border-radius: 20px; font-size: 1.3rem; font-weight: 950;
@@ -227,6 +228,7 @@
   <h1>👨‍👧 親子でお金</h1>
   <p>コインを見て、いくらか声に出そう。<br>大人は ○ か × を押すだけ。</p>
   <button id="levelSelectBtn" onclick="unlockAudio();playClick();showLevelScreen()">レベルを選ぶ</button>
+  <div id="versionTag">v1.3.0</div>
 </div>
 
 <!-- レベル選択画面 -->
@@ -252,9 +254,9 @@
 
 <!-- 親エリア -->
 <div id="parentArea">
-  <button class="judgeBtn ng" onclick="judge(false)">✕</button>
+  <button class="judgeBtn ng" ontouchstart="preSoundNG(event)" onclick="judge(false)">✕</button>
   <div id="scoreDisp">せいかい<span id="scoreNum">0</span></div>
-  <button class="judgeBtn ok" onclick="judge(true)">○</button>
+  <button class="judgeBtn ok" ontouchstart="preSoundOK(event)" onclick="judge(true)">○</button>
   <button id="backBtn" onclick="playCancel();goBack()">もどる</button>
 </div>
 
@@ -433,7 +435,7 @@ const SE = {};       // デコード済みAudioBuffer
 let audioReady = false;
 
 function getCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive', sampleRate: 44100 });
   return audioCtx;
 }
 
@@ -473,6 +475,10 @@ function playPinpon()  { playSound('correct'); }
 function playBubuu()   { playSound('incorrect'); }
 function playClick()   { playSound('click'); }
 function playCancel()  { playSound('cancel'); }
+
+let _preSoundFired = false;
+function preSoundOK(e) { if (_preSoundFired || judging) return; _preSoundFired = true; playPinpon(); setTimeout(() => { _preSoundFired = false; }, 500); }
+function preSoundNG(e) { if (_preSoundFired || judging) return; _preSoundFired = true; playBubuu();  setTimeout(() => { _preSoundFired = false; }, 500); }
 
 // ===== バッジ（localStorage） =====
 const BADGE_KEY = 'oyako_cleared';
@@ -600,7 +606,7 @@ function judge(correct) {
     score++;
     streak++;
     document.getElementById('scoreNum').textContent = score;
-    playPinpon();
+    if (!_preSoundFired) playPinpon();
     showFeedback('⭕️');
     spawnStars();
     // 10問連続でクリアバッジ（隠し）
@@ -610,7 +616,7 @@ function judge(correct) {
     setTimeout(nextProblem, 900);
   } else {
     streak = 0;
-    playBubuu();
+    if (!_preSoundFired) playBubuu();
     showFeedback('❌');
     document.getElementById('coinArea').classList.add('shaking');
     setTimeout(() => {
