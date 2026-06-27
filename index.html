@@ -14,19 +14,27 @@
     --parent-bg: #1a1a2e;
   }
   * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; overflow: hidden; }
+  html {
+    height: 100%; margin: 0; background: #000;
+    display: flex; align-items: center; justify-content: center;
+  }
   body {
     font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
     background: var(--bg);
     color: var(--dark);
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 480px;
     height: 100%;
+    max-height: 860px;
+    position: relative;
+    overflow: hidden;
   }
 
   /* ===== タイトル画面 ===== */
   #titleScreen {
-    position: fixed; inset: 0; background: var(--parent-bg);
+    position: absolute; inset: 0; background: var(--parent-bg);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     gap: 20px; z-index: 200; padding: 24px;
@@ -36,7 +44,7 @@
   #versionTag { color: #555; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; }
   #resetBtn { background: none; border: none; color: #444; font-size: 0.75rem; cursor: pointer; padding: 4px 8px; text-decoration: underline; margin-top: 4px; }
   #resetConfirm {
-    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    position: absolute; inset: 0; background: rgba(0,0,0,.7);
     display: none; align-items: center; justify-content: center; z-index: 300;
   }
   #resetConfirm.show { display: flex; }
@@ -56,7 +64,7 @@
 
   /* ===== レベル選択画面 ===== */
   #levelScreen {
-    position: fixed; inset: 0; background: #f0ece8;
+    position: absolute; inset: 0; background: #f0ece8;
     display: none; flex-direction: column; z-index: 190; overflow: hidden;
   }
   #levelScreen.show { display: flex; }
@@ -96,7 +104,7 @@
 
   /* ===== レベル詳細モーダル ===== */
   #levelModal {
-    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    position: absolute; inset: 0; background: rgba(0,0,0,.5);
     display: none; align-items: flex-end; justify-content: center;
     z-index: 300;
   }
@@ -172,13 +180,13 @@
     margin-bottom: 2px;
   }
   #coinArea {
-    width: 100%; max-width: 400px; flex: 1;
-    display: flex; justify-content: center; align-items: stretch;
-    padding-bottom: 4px; overflow: hidden; gap: 8px;
+    width: 100%; max-width: 400px; flex: 0 0 auto;
+    display: flex; justify-content: center; align-items: flex-start;
+    padding-bottom: 4px; gap: 8px;
   }
   .placeGroup {
     display: flex; flex-direction: column; align-items: flex-start;
-    gap: 4px; flex: 1; min-width: 0; overflow: hidden;
+    gap: 4px; flex: 1; min-width: 0;
   }
   .placeLabel {
     font-size: 0.8rem; font-weight: 700; color: #999;
@@ -186,9 +194,9 @@
     padding: 3px 10px; flex-shrink: 0;
   }
   .coinCols {
-    flex: 1; width: 100%;
+    width: 100%;
     display: flex; flex-direction: row; align-items: flex-end;
-    gap: 2px; overflow: hidden;
+    gap: 2px;
   }
   .coinCol {
     display: flex; flex-direction: column-reverse;
@@ -201,13 +209,13 @@
 
   /* フィードバック */
   #feedback {
-    position: fixed; inset: 0; display: none;
+    position: absolute; inset: 0; display: none;
     align-items: center; justify-content: center;
     z-index: 50; pointer-events: none;
   }
   #feedback.show { display: flex; }
   #clearResult {
-    position: fixed; inset: 0; background: rgba(0,0,0,.75);
+    position: absolute; inset: 0; background: rgba(0,0,0,.75);
     display: none; flex-direction: column;
     align-items: center; justify-content: center; z-index: 200; gap: 16px;
   }
