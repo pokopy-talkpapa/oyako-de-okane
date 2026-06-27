@@ -194,6 +194,23 @@
     z-index: 50; pointer-events: none;
   }
   #feedback.show { display: flex; }
+  #clearResult {
+    position: fixed; inset: 0; background: rgba(0,0,0,.75);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 200; gap: 16px;
+  }
+  #clearResult.show { display: flex; }
+  #clearResult .crTitle { font-size: 2.5rem; color: #fff; font-weight: 950; }
+  #clearResult .crLv { font-size: 1rem; color: #fde68a; font-weight: 700; }
+  #clearResult .crSec { font-size: 1.2rem; color: #fff; }
+  #clearResult .crSec span { font-size: 2.8rem; font-weight: 950; color: #fbbf24; }
+  #clearResult .crBtns { display: flex; gap: 12px; margin-top: 12px; }
+  #clearResult button {
+    padding: 14px 24px; border-radius: 14px; border: none; font-size: 1rem;
+    font-weight: 800; cursor: pointer;
+  }
+  #clearResult #crRetry { background: #22c55e; color: #fff; }
+  #clearResult #crBack  { background: #555; color: #fff; }
   #feedbackInner { font-size: 6rem; animation: pop .5s cubic-bezier(.36,.07,.19,.97) both; }
   @keyframes pop {
     0%   { transform: scale(.3); opacity: 0; }
@@ -292,6 +309,16 @@
 </div>
 
 <div id="feedback"><div id="feedbackInner"></div></div>
+
+<div id="clearResult">
+  <div class="crTitle">🎉 クリア！</div>
+  <div class="crLv" id="clearResultLv"></div>
+  <div class="crSec">10問達成まで <span id="clearResultTime"></span> 秒！</div>
+  <div class="crBtns">
+    <button id="crRetry" onclick="hideClearResult(true)">もう一度</button>
+    <button id="crBack"  onclick="hideClearResult(false)">もどる</button>
+  </div>
+</div>
 
 <script>
 // ===== レベル定義 =====
@@ -557,6 +584,11 @@ function goBack() {
   document.getElementById('levelScreen').classList.add('show');
 }
 
+let streakStartTime = 0;
+let problemStartTime = 0;
+let problemTimerId = null;
+const PROBLEM_TIME_LIMIT = 10000; // 10秒以内
+
 function startGame(lv) {
   currentLevel = lv;
   score = 0;
@@ -565,16 +597,33 @@ function startGame(lv) {
   document.getElementById('levelBadgeGame').textContent =
     lv.lv === 13 ? '🏆 チャンピオン' : `Lv.${lv.lv}　${lv.title}`;
   champPrev = -1;
+  streakStartTime = 0;
   nextProblem();
+}
+
+function clearCoins() {
+  ['stack100L','stack100R','stack10L','stack10R','stack1L','stack1R'].forEach(id => {
+    document.getElementById(id).innerHTML = '';
+  });
 }
 
 function nextProblem() {
   judging = false;
-  let n;
-  // 0円は出さない（コインが全部空になる）
-  do { n = currentLevel.gen(); } while (n === 0);
-  currentNum = n;
-  renderCoins(currentNum);
+  // 一瞬コインを消してから次を出す
+  clearCoins();
+  clearTimeout(problemTimerId);
+  setTimeout(() => {
+    let n;
+    do { n = currentLevel.gen(); } while (n === 0 || n === currentNum);
+    currentNum = n;
+    renderCoins(currentNum);
+    // 問題ごとのタイマー開始
+    problemStartTime = Date.now();
+    problemTimerId = setTimeout(() => {
+      if (judging) return; // すでに答えた後なら無視
+      streak = 0; // タイムオーバーでstreak切れ
+    }, PROBLEM_TIME_LIMIT);
+  }, 300);
 }
 
 function renderCoins(n) {
@@ -602,28 +651,53 @@ function makeCoin(img) {
 function judge(correct) {
   if (judging || !currentLevel) return;
   judging = true;
-  if (correct) {
+  clearTimeout(problemTimerId);
+  const elapsed = Date.now() - problemStartTime;
+  const inTime = elapsed <= PROBLEM_TIME_LIMIT;
+  if (correct && inTime) {
     score++;
     streak++;
     document.getElementById('scoreNum').textContent = score;
     if (!_preSoundFired) playPinpon();
     showFeedback('⭕️');
     spawnStars();
-    // 10問連続でクリアバッジ（隠し）
+    if (streak === 1) streakStartTime = Date.now() - elapsed; // streak開始時刻を補正
     if (streak >= 10) {
+      const totalSec = ((Date.now() - streakStartTime) / 1000).toFixed(1);
       setCleared(currentLevel.lv);
+      setTimeout(() => showClearResult(totalSec), 900);
+      return;
     }
     setTimeout(nextProblem, 900);
   } else {
     streak = 0;
     if (!_preSoundFired) playBubuu();
-    showFeedback('❌');
+    showFeedback(correct ? '⏱' : '❌');
     document.getElementById('coinArea').classList.add('shaking');
     setTimeout(() => {
       document.getElementById('coinArea').classList.remove('shaking');
       document.getElementById('feedback').classList.remove('show');
       judging = false;
+      nextProblem();
     }, 500);
+  }
+}
+
+function showClearResult(totalSec) {
+  const lv = currentLevel;
+  clearTimeout(problemTimerId);
+  document.getElementById('clearResultLv').textContent =
+    lv.lv === 13 ? '🏆 チャンピオン' : `Lv.${lv.lv}　${lv.title}`;
+  document.getElementById('clearResultTime').textContent = totalSec;
+  document.getElementById('clearResult').classList.add('show');
+}
+
+function hideClearResult(retry) {
+  document.getElementById('clearResult').classList.remove('show');
+  if (retry) {
+    startGame(currentLevel);
+  } else {
+    goBack();
   }
 }
 
