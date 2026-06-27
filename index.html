@@ -226,7 +226,7 @@
 <div id="titleScreen">
   <h1>👨‍👧 親子でお金</h1>
   <p>コインを見て、いくらか声に出そう。<br>大人は ○ か × を押すだけ。</p>
-  <button id="levelSelectBtn" onclick="showLevelScreen()">レベルを選ぶ</button>
+  <button id="levelSelectBtn" onclick="playClick();showLevelScreen()">レベルを選ぶ</button>
 </div>
 
 <!-- レベル選択画面 -->
@@ -245,8 +245,8 @@
     <p class="modalTitle" id="modalTitle"></p>
     <p class="modalDesc" id="modalDesc"></p>
     <div class="modalRange" id="modalRange"></div>
-    <button id="modalStartBtn" onclick="startFromModal()">このレベルでスタート</button>
-    <button id="modalCancelBtn" onclick="closeModal()">もどる</button>
+    <button id="modalStartBtn" onclick="playClick();startFromModal()">このレベルでスタート</button>
+    <button id="modalCancelBtn" onclick="playClick();closeModal()">もどる</button>
   </div>
 </div>
 
@@ -255,7 +255,7 @@
   <button class="judgeBtn ng" onclick="judge(false)">✕</button>
   <div id="scoreDisp">せいかい<span id="scoreNum">0</span></div>
   <button class="judgeBtn ok" onclick="judge(true)">○</button>
-  <button id="backBtn" onclick="goBack()">もどる</button>
+  <button id="backBtn" onclick="playClick();goBack()">もどる</button>
 </div>
 
 <div class="divider"></div>
@@ -425,39 +425,88 @@ function genChampion() {
 
 // ===== 効果音（Web Audio合成） =====
 let audioCtx = null;
+
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-function playPinpon() {
+
+async function resumeAudio() {
   const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') await ctx.resume();
+  return ctx;
+}
+
+// ピンポーン：明るい2音チャイム
+async function playPinpon() {
+  const ctx = await resumeAudio();
   const t = ctx.currentTime;
-  // 高い音 → さらに高い音の2音
-  [[880, 0, 0.12], [1320, 0.13, 0.12]].forEach(([freq, delay, dur]) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, t + delay);
-    gain.gain.setValueAtTime(0.5, t + delay);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + delay + dur);
-    osc.start(t + delay); osc.stop(t + delay + dur + 0.01);
+
+  // 1音・2音を同じロジックで生成
+  [[880, 0], [1318, 0.2]].forEach(([freq, delay]) => {
+    const s = t + delay;
+    // 基音
+    const o1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    o1.type = 'sine'; o1.frequency.value = freq;
+    o1.connect(g1); g1.connect(ctx.destination);
+    g1.gain.setValueAtTime(0, s);
+    g1.gain.linearRampToValueAtTime(0.5, s + 0.012);
+    g1.gain.exponentialRampToValueAtTime(0.001, s + 0.55);
+    o1.start(s); o1.stop(s + 0.58);
+    // 倍音（短め・小さめ）
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.type = 'sine'; o2.frequency.value = freq * 2.756;
+    o2.connect(g2); g2.connect(ctx.destination);
+    g2.gain.setValueAtTime(0, s);
+    g2.gain.linearRampToValueAtTime(0.18, s + 0.008);
+    g2.gain.exponentialRampToValueAtTime(0.001, s + 0.22);
+    o2.start(s); o2.stop(s + 0.25);
   });
 }
-function playBubuu() {
-  const ctx = getAudioCtx();
+
+// ブブー：太い2連バズ
+async function playBubuu() {
+  const ctx = await resumeAudio();
   const t = ctx.currentTime;
-  // 低い矩形波2連
-  [[180, 0, 0.18], [150, 0.22, 0.22]].forEach(([freq, delay, dur]) => {
-    const osc = ctx.createOscillator();
+
+  function buzz(startDelay, freq, dur) {
+    const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(freq, t + delay);
-    gain.gain.setValueAtTime(0.25, t + delay);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + delay + dur);
-    osc.start(t + delay); osc.stop(t + delay + dur + 0.01);
-  });
+    const filt = ctx.createBiquadFilter();
+    osc.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, t + startDelay);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + startDelay + dur);
+    filt.type = 'lowpass'; filt.frequency.value = 600;
+    const s = t + startDelay;
+    gain.gain.setValueAtTime(0.4, s);
+    gain.gain.setValueAtTime(0.4, s + dur - 0.04);
+    gain.gain.linearRampToValueAtTime(0, s + dur);
+    osc.start(s); osc.stop(s + dur + 0.01);
+  }
+  buzz(0,    160, 0.22);
+  buzz(0.27, 140, 0.22);
+}
+
+// コイン音：ボタンタップ時の軽いクリック
+async function playClick() {
+  const ctx = await resumeAudio();
+  const t = ctx.currentTime;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.012));
+  }
+  const src  = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  const filt = ctx.createBiquadFilter();
+  src.buffer = buf;
+  src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+  filt.type = 'bandpass'; filt.frequency.value = 1800; filt.Q.value = 0.8;
+  gain.gain.setValueAtTime(0.3, t);
+  src.start(t);
 }
 
 // ===== バッジ（localStorage） =====
@@ -504,7 +553,7 @@ function buildLevelList() {
       </div>
       ${isCleared ? '<div class="clearStar">⭐</div>' : '<div class="levelArrow">›</div>'}
     `;
-    item.onclick = () => openLevelModal(lv);
+    item.onclick = () => { playClick(); openLevelModal(lv); };
     list.appendChild(item);
   });
 }
