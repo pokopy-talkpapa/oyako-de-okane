@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>親子でお金</title>
+<style>
+  :root {
+    --bg: #f7f3ee;
+    --panel: #ffffff;
+    --shadow: 0 8px 20px rgba(0,0,0,.10);
+    --radius: 20px;
+    --dark: #111;
+    --ok: #0f8a2b;
+    --ng: #e0453a;
+    --parent-bg: #1a1a2e;
+  }
+  * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body {
+    font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* ===== 親エリア（上1/5・逆さま） ===== */
+  #parentArea {
+    background: var(--parent-bg);
+    flex: 0 0 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 8px 20px;
+    transform: rotate(180deg);
+  }
+
+  .judgeBtn {
+    flex: 1;
+    max-width: 160px;
+    height: 100%;
+    border: 0;
+    border-radius: 18px;
+    font-size: 2.8rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform .1s, opacity .1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 14px rgba(0,0,0,.3);
+  }
+  .judgeBtn:active { transform: scale(.92); opacity: .85; }
+  .judgeBtn.ok  { background: #22c55e; color: #fff; }
+  .judgeBtn.ng  { background: #ef4444; color: #fff; }
+
+  /* 親エリア中央：正解数表示 */
+  #scoreDisp {
+    color: #aaa;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    min-width: 56px;
+    line-height: 1.3;
+  }
+  #scoreDisp span { display: block; font-size: 1.5rem; color: #fff; font-weight: 900; }
+
+  /* ===== 区切り線 ===== */
+  .divider {
+    height: 4px;
+    background: linear-gradient(90deg, #f59e0b, #ef4444, #3b82f6);
+  }
+
+  /* ===== 子どもエリア（下4/5） ===== */
+  #childArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 16px 16px;
+    overflow: hidden;
+  }
+
+  /* 問題ラベル */
+  #problemLabel {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: .08em;
+    margin-bottom: 6px;
+    margin-top: 2px;
+  }
+
+  /* コイン表示エリア */
+  #coinArea {
+    width: 100%;
+    max-width: 400px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 4px;
+    overflow: hidden;
+  }
+
+  /* 3列（百/十/一） */
+  .placeGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    max-width: 110px;
+    height: 100%;
+  }
+  .placeLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #999;
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 3px 10px;
+    flex-shrink: 0;
+  }
+  .coinStack {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow: hidden;
+  }
+  .coinImg {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  /* 正解フィードバック */
+  #feedback {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    pointer-events: none;
+  }
+  #feedback.show { display: flex; }
+  #feedbackInner {
+    font-size: 6rem;
+    animation: pop .5s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  @keyframes pop {
+    0%   { transform: scale(.3); opacity: 0; }
+    55%  { transform: scale(1.4); opacity: 1; }
+    75%  { transform: scale(.9); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    15% { transform: translateX(-10px); }
+    30% { transform: translateX(10px); }
+    45% { transform: translateX(-7px); }
+    60% { transform: translateX(7px); }
+    75% { transform: translateX(-3px); }
+    90% { transform: translateX(3px); }
+  }
+  .shaking { animation: shake .4s ease !important; }
+
+  .star {
+    position: fixed;
+    font-size: 2rem;
+    pointer-events: none;
+    z-index: 99;
+    animation: flystar .8s ease-out forwards;
+  }
+  @keyframes flystar {
+    0%   { opacity:1; transform:translate(0,0) scale(1); }
+    100% { opacity:0; transform:translate(var(--dx),var(--dy)) scale(.3); }
+  }
+
+  /* ===== スタート画面 ===== */
+  #startScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--parent-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    z-index: 100;
+  }
+  #startScreen h1 {
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 950;
+    margin: 0;
+    text-align: center;
+  }
+  #startScreen p {
+    color: #aaa;
+    font-size: 1rem;
+    margin: 0;
+    text-align: center;
+    line-height: 1.7;
+  }
+  #startBtn {
+    background: #f59e0b;
+    color: #fff;
+    border: 0;
+    border-radius: 20px;
+    font-size: 1.4rem;
+    font-weight: 950;
+    padding: 20px 60px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,.3);
+    transition: transform .1s;
+  }
+  #startBtn:active { transform: scale(.96); }
+</style>
+</head>
+<body>
+
+<!-- スタート画面 -->
+<div id="startScreen">
+  <h1>👨‍👧 親子でお金</h1>
+  <p>コインを見て、<br>いくらか声に出して言おう！<br><br>おとなは ○ か × を押してね</p>
+  <button id="startBtn" onclick="startGame()">スタート</button>
+</div>
+
+<!-- 親エリア（逆さま表示・上1/5） -->
+<div id="parentArea">
+  <button class="judgeBtn ng" onclick="judge(false)">✕</button>
+  <div id="scoreDisp">せいかい<span id="scoreNum">0</span></div>
+  <button class="judgeBtn ok" onclick="judge(true)">○</button>
+</div>
+
+<div class="divider"></div>
+
+<!-- 子どもエリア（下4/5） -->
+<div id="childArea">
+  <div id="problemLabel">なんえん？</div>
+  <div id="coinArea">
+    <div class="placeGroup" id="g100">
+      <div class="placeLabel">100円</div>
+      <div class="coinStack" id="stack100"></div>
+    </div>
+    <div class="placeGroup" id="g10">
+      <div class="placeLabel">10円</div>
+      <div class="coinStack" id="stack10"></div>
+    </div>
+    <div class="placeGroup" id="g1">
+      <div class="placeLabel">1円</div>
+      <div class="coinStack" id="stack1"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 正解/不正解フィードバック -->
+<div id="feedback">
+  <div id="feedbackInner"></div>
+</div>
+
+<script>
+  let score = 0;
+  let currentNum = 0;
+  let judging = false;
+
+  function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    nextProblem();
+  }
+
+  function nextProblem() {
+    judging = false;
+    // 1〜999のランダム（0は除く）
+    currentNum = Math.floor(Math.random() * 999) + 1;
+    renderCoins(currentNum);
+  }
+
+  function renderCoins(n) {
+    const h = Math.floor(n / 100);
+    const t = Math.floor((n % 100) / 10);
+    const o = n % 10;
+    fillStack('stack100', h, 'money_100.png');
+    fillStack('stack10',  t, 'money_10.png');
+    fillStack('stack1',   o, 'money_1.png');
+  }
+
+  function fillStack(id, count, img) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const coin = document.createElement('img');
+      coin.src = img;
+      coin.className = 'coinImg';
+      el.appendChild(coin);
+    }
+  }
+
+  function judge(correct) {
+    if (judging) return;
+    judging = true;
+
+    if (correct) {
+      score++;
+      document.getElementById('scoreNum').textContent = score;
+      showFeedback('⭕️');
+      spawnStars();
+      setTimeout(nextProblem, 900);
+    } else {
+      showFeedback('❌');
+      document.getElementById('coinArea').classList.add('shaking');
+      setTimeout(() => {
+        document.getElementById('coinArea').classList.remove('shaking');
+        document.getElementById('feedback').classList.remove('show');
+        judging = false;
+      }, 500);
+    }
+  }
+
+  function showFeedback(icon) {
+    const fb = document.getElementById('feedback');
+    const inner = document.getElementById('feedbackInner');
+    inner.textContent = icon;
+    fb.classList.add('show');
+    setTimeout(() => fb.classList.remove('show'), 700);
+  }
+
+  function spawnStars() {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight * 0.6;
+    ['⭐','✨','🌟','⭐','✨'].forEach((s, i) => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'star';
+        el.textContent = s;
+        const angle = (i / 5) * Math.PI * 2;
+        el.style.setProperty('--dx', Math.cos(angle) * 100 + 'px');
+        el.style.setProperty('--dy', Math.sin(angle) * 100 + 'px');
+        el.style.left = cx + 'px';
+        el.style.top  = cy + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 800);
+      }, i * 60);
+    });
+  }
+</script>
+</body>
+</html>
