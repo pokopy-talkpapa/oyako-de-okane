@@ -423,36 +423,50 @@ function genChampion() {
   return n;
 }
 
-// ===== 効果音（MP3） =====
-const SE = {};
-let audioUnlocked = false;
+// ===== 効果音（Web Audio + 事前デコード方式） =====
+// Audio()要素はラグが出るため使わない。
+// 起動時にMP3をfetch→decodeAudioDataで完全デコードし、
+// 再生はBufferSourceNodeの即時start(0)でゲーム品質のゼロラグを実現。
 
-function loadSounds() {
-  ['correct','incorrect','click','cancel'].forEach(name => {
-    const a = new Audio('sounds/' + name + '.mp3');
-    a.preload = 'auto';
-    SE[name] = a;
-  });
+let audioCtx = null;
+const SE = {};       // デコード済みAudioBuffer
+let audioReady = false;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
 }
 
-// 最初のタップでアンロック（iOS対応）
+async function loadSounds() {
+  const ctx = getCtx();
+  await Promise.all(['correct','incorrect','click','cancel'].map(async name => {
+    try {
+      const res = await fetch('sounds/' + name + '.mp3');
+      const buf = await res.arrayBuffer();
+      SE[name] = await ctx.decodeAudioData(buf);
+    } catch(e) { console.warn('SE load failed:', name, e); }
+  }));
+}
+
+// 最初のタップでContextをresume（iOS必須・1回だけ）
 function unlockAudio() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  Object.values(SE).forEach(a => {
-    a.play().catch(() => {});
-    a.pause();
-    a.currentTime = 0;
-  });
+  if (audioReady) return;
+  const ctx = getCtx();
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(() => { audioReady = true; });
+  } else {
+    audioReady = true;
+  }
 }
 
-function initAudioCtx() {} // 互換性のため残す（呼ばれても何もしない）
+function initAudioCtx() {} // 互換性維持
 
 function playSound(name) {
-  const a = SE[name];
-  if (!a) return;
-  a.currentTime = 0;
-  a.play().catch(() => {});
+  if (!audioReady || !SE[name]) return;
+  const src = audioCtx.createBufferSource();
+  src.buffer = SE[name];
+  src.connect(audioCtx.destination);
+  src.start(0); // 即時再生・ラグなし
 }
 
 function playPinpon()  { playSound('correct'); }
