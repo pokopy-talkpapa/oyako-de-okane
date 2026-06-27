@@ -8,8 +8,6 @@
   :root {
     --bg: #f7f3ee;
     --panel: #ffffff;
-    --shadow: 0 8px 20px rgba(0,0,0,.10);
-    --radius: 20px;
     --dark: #111;
     --ok: #0f8a2b;
     --ng: #e0453a;
@@ -26,146 +24,168 @@
     height: 100%;
   }
 
-  /* ===== 親エリア（上1/5・逆さま） ===== */
+  /* ===== タイトル画面 ===== */
+  #titleScreen {
+    position: fixed; inset: 0; background: var(--parent-bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px; z-index: 200; padding: 24px;
+  }
+  #titleScreen h1 { color: #fff; font-size: 1.8rem; font-weight: 950; margin: 0; }
+  #titleScreen p { color: #aaa; font-size: 0.95rem; margin: 0; text-align: center; line-height: 1.7; }
+  #levelSelectBtn {
+    background: #f59e0b; color: #fff; border: 0;
+    border-radius: 20px; font-size: 1.3rem; font-weight: 950;
+    padding: 18px 52px; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,.3); transition: transform .1s;
+  }
+  #levelSelectBtn:active { transform: scale(.96); }
+
+  /* ===== レベル選択画面 ===== */
+  #levelScreen {
+    position: fixed; inset: 0; background: #f0ece8;
+    display: none; flex-direction: column; z-index: 190; overflow: hidden;
+  }
+  #levelScreen.show { display: flex; }
+  .levelScreenHeader {
+    background: var(--parent-bg); color: #fff;
+    padding: 14px 20px; font-size: 1rem; font-weight: 700;
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .levelScreenHeader button {
+    background: none; border: 0; color: #aaa; font-size: 1.3rem; cursor: pointer; padding: 0;
+  }
+  .levelList {
+    flex: 1; overflow-y: auto; padding: 12px 16px 24px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .levelItem {
+    background: #fff; border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer; transition: background .1s, transform .08s;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+  }
+  .levelItem:active { background: #f5f5f5; transform: scale(.98); }
+  .levelBadge {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--parent-bg); color: #fff;
+    font-size: 0.8rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .levelBadge.champ { background: #f59e0b; font-size: 1.1rem; }
+  .levelItemText { flex: 1; min-width: 0; }
+  .levelTitle { font-size: 0.95rem; font-weight: 700; color: #111; }
+  .levelDesc { font-size: 0.78rem; color: #777; margin-top: 2px; line-height: 1.4; }
+  .levelArrow { color: #ccc; font-size: 1.1rem; }
+
+  /* ===== レベル詳細モーダル ===== */
+  #levelModal {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 300;
+  }
+  #levelModal.show { display: flex; }
+  .modalCard {
+    background: #fff; border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px; width: 100%; max-width: 520px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .modalLv { font-size: 0.8rem; font-weight: 700; color: #aaa; letter-spacing: .06em; }
+  .modalTitle { font-size: 1.3rem; font-weight: 950; color: #111; margin: 0; }
+  .modalDesc { font-size: 0.95rem; color: #555; line-height: 1.65; margin: 0; }
+  .modalRange {
+    background: #f5f5f5; border-radius: 10px;
+    padding: 10px 14px; font-size: 0.85rem; color: #333; font-weight: 700;
+  }
+  #modalStartBtn {
+    background: #22c55e; color: #fff; border: 0;
+    border-radius: 16px; font-size: 1.2rem; font-weight: 950;
+    padding: 16px; cursor: pointer; transition: transform .1s;
+  }
+  #modalStartBtn:active { transform: scale(.97); }
+  #modalCancelBtn {
+    background: none; border: 0; color: #aaa;
+    font-size: 0.9rem; cursor: pointer; text-align: center; padding: 4px;
+  }
+
+  /* ===== 親エリア ===== */
   #parentArea {
     background: var(--parent-bg);
     flex: 0 0 20%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 8px 20px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; padding: 8px 20px;
     transform: rotate(180deg);
   }
-
   .judgeBtn {
-    flex: 1;
-    max-width: 160px;
-    height: 100%;
-    border: 0;
-    border-radius: 18px;
-    font-size: 2.8rem;
-    font-weight: 900;
-    cursor: pointer;
-    transition: transform .1s, opacity .1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex: 1; max-width: 160px; height: 100%;
+    border: 0; border-radius: 18px; font-size: 2.8rem; font-weight: 900;
+    cursor: pointer; transition: transform .1s, opacity .1s;
+    display: flex; align-items: center; justify-content: center;
     box-shadow: 0 5px 14px rgba(0,0,0,.3);
   }
   .judgeBtn:active { transform: scale(.92); opacity: .85; }
-  .judgeBtn.ok  { background: #22c55e; color: #fff; }
-  .judgeBtn.ng  { background: #ef4444; color: #fff; }
-
-  /* 親エリア中央：正解数表示 */
+  .judgeBtn.ok { background: #22c55e; color: #fff; }
+  .judgeBtn.ng { background: #ef4444; color: #fff; }
   #scoreDisp {
-    color: #aaa;
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-align: center;
-    min-width: 56px;
-    line-height: 1.3;
+    color: #aaa; font-size: 0.9rem; font-weight: 700;
+    text-align: center; min-width: 56px; line-height: 1.3;
   }
   #scoreDisp span { display: block; font-size: 1.5rem; color: #fff; font-weight: 900; }
 
-  /* ===== 区切り線 ===== */
-  .divider {
-    height: 4px;
-    background: linear-gradient(90deg, #f59e0b, #ef4444, #3b82f6);
-  }
+  .divider { height: 4px; background: linear-gradient(90deg, #f59e0b, #ef4444, #3b82f6); }
 
-  /* ===== 子どもエリア（下4/5） ===== */
+  /* ===== 子どもエリア ===== */
   #childArea {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 16px 16px;
-    overflow: hidden;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; padding: 8px 16px 16px; overflow: hidden;
   }
-
-  /* 問題ラベル */
   #problemLabel {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #888;
-    letter-spacing: .08em;
-    margin-bottom: 6px;
-    margin-top: 2px;
+    font-size: 0.85rem; font-weight: 700; color: #888;
+    letter-spacing: .08em; margin-bottom: 6px; margin-top: 2px;
   }
-
-  /* コイン表示エリア */
+  /* レベル表示バッジ（子どもエリア上部） */
+  #levelBadgeGame {
+    font-size: 0.72rem; font-weight: 700; color: #bbb;
+    margin-bottom: 2px;
+  }
   #coinArea {
-    width: 100%;
-    max-width: 400px;
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    padding-bottom: 4px;
-    overflow: hidden;
-    gap: 8px;
+    width: 100%; max-width: 400px; flex: 1;
+    display: flex; justify-content: center; align-items: stretch;
+    padding-bottom: 4px; overflow: hidden; gap: 8px;
   }
-
-  /* 3位グループ（百/十/一） */
   .placeGroup {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: 4px; flex: 1; min-width: 0; overflow: hidden;
   }
   .placeLabel {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #999;
-    background: #f0f0f0;
-    border-radius: 8px;
-    padding: 3px 10px;
-    flex-shrink: 0;
+    font-size: 0.8rem; font-weight: 700; color: #999;
+    background: #f0f0f0; border-radius: 8px;
+    padding: 3px 10px; flex-shrink: 0;
   }
-  /* 2列コインエリア */
   .coinCols {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    gap: 2px;
-    overflow: hidden;
+    flex: 1; width: 100%;
+    display: flex; flex-direction: row; align-items: flex-end;
+    gap: 2px; overflow: hidden;
   }
   .coinCol {
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    gap: 2px;
+    display: flex; flex-direction: column-reverse;
+    align-items: center; gap: 2px;
   }
   .coinImg {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
-    user-select: none;
-    pointer-events: none;
-    flex-shrink: 0;
+    width: 44px; height: 44px; object-fit: contain;
+    user-select: none; pointer-events: none; flex-shrink: 0;
   }
 
-  /* 正解フィードバック */
+  /* フィードバック */
   #feedback {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-    pointer-events: none;
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    z-index: 50; pointer-events: none;
   }
   #feedback.show { display: flex; }
-  #feedbackInner {
-    font-size: 6rem;
-    animation: pop .5s cubic-bezier(.36,.07,.19,.97) both;
-  }
+  #feedbackInner { font-size: 6rem; animation: pop .5s cubic-bezier(.36,.07,.19,.97) both; }
   @keyframes pop {
     0%   { transform: scale(.3); opacity: 0; }
     55%  { transform: scale(1.4); opacity: 1; }
@@ -182,70 +202,47 @@
     90% { transform: translateX(3px); }
   }
   .shaking { animation: shake .4s ease !important; }
-
   .star {
-    position: fixed;
-    font-size: 2rem;
-    pointer-events: none;
-    z-index: 99;
+    position: fixed; font-size: 2rem; pointer-events: none; z-index: 99;
     animation: flystar .8s ease-out forwards;
   }
   @keyframes flystar {
     0%   { opacity:1; transform:translate(0,0) scale(1); }
     100% { opacity:0; transform:translate(var(--dx),var(--dy)) scale(.3); }
   }
-
-  /* ===== スタート画面 ===== */
-  #startScreen {
-    position: fixed;
-    inset: 0;
-    background: var(--parent-bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    z-index: 100;
-  }
-  #startScreen h1 {
-    color: #fff;
-    font-size: 1.8rem;
-    font-weight: 950;
-    margin: 0;
-    text-align: center;
-  }
-  #startScreen p {
-    color: #aaa;
-    font-size: 1rem;
-    margin: 0;
-    text-align: center;
-    line-height: 1.7;
-  }
-  #startBtn {
-    background: #f59e0b;
-    color: #fff;
-    border: 0;
-    border-radius: 20px;
-    font-size: 1.4rem;
-    font-weight: 950;
-    padding: 20px 60px;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(0,0,0,.3);
-    transition: transform .1s;
-  }
-  #startBtn:active { transform: scale(.96); }
 </style>
 </head>
 <body>
 
-<!-- スタート画面 -->
-<div id="startScreen">
+<!-- タイトル画面 -->
+<div id="titleScreen">
   <h1>👨‍👧 親子でお金</h1>
-  <p>コインを見て、<br>いくらか声に出して言おう！<br><br>おとなは ○ か × を押してね</p>
-  <button id="startBtn" onclick="startGame()">スタート</button>
+  <p>コインを見て、いくらか声に出そう。<br>大人は ○ か × を押すだけ。</p>
+  <button id="levelSelectBtn" onclick="showLevelScreen()">レベルを選ぶ</button>
 </div>
 
-<!-- 親エリア（逆さま表示・上1/5） -->
+<!-- レベル選択画面 -->
+<div id="levelScreen">
+  <div class="levelScreenHeader">
+    <button onclick="hideLevelScreen()">←</button>
+    レベルを選んでください
+  </div>
+  <div class="levelList" id="levelList"></div>
+</div>
+
+<!-- レベル詳細モーダル -->
+<div id="levelModal" onclick="closeLevelModal(event)">
+  <div class="modalCard">
+    <div class="modalLv" id="modalLv"></div>
+    <p class="modalTitle" id="modalTitle"></p>
+    <p class="modalDesc" id="modalDesc"></p>
+    <div class="modalRange" id="modalRange"></div>
+    <button id="modalStartBtn" onclick="startFromModal()">このレベルでスタート</button>
+    <button id="modalCancelBtn" onclick="closeModal()">もどる</button>
+  </div>
+</div>
+
+<!-- 親エリア -->
 <div id="parentArea">
   <button class="judgeBtn ng" onclick="judge(false)">✕</button>
   <div id="scoreDisp">せいかい<span id="scoreNum">0</span></div>
@@ -254,8 +251,9 @@
 
 <div class="divider"></div>
 
-<!-- 子どもエリア（下4/5） -->
+<!-- 子どもエリア -->
 <div id="childArea">
+  <div id="levelBadgeGame"></div>
   <div id="problemLabel">なんえん？</div>
   <div id="coinArea">
     <div class="placeGroup">
@@ -282,106 +280,283 @@
   </div>
 </div>
 
-<!-- 正解/不正解フィードバック -->
-<div id="feedback">
-  <div id="feedbackInner"></div>
-</div>
+<div id="feedback"><div id="feedbackInner"></div></div>
 
 <script>
-  let score = 0;
-  let currentNum = 0;
-  let judging = false;
+// ===== レベル定義 =====
+const LEVELS = [
+  {
+    lv: 1,
+    title: '10円台',
+    desc: '10〜19円のみ出題。10円玉1枚と1円玉の組み合わせだけなので、コインの種類を分けて読む最初のステップです。',
+    range: '出題範囲：10〜19円',
+    gen: () => pick(range(10,19))
+  },
+  {
+    lv: 2,
+    title: '20〜50円台・少なめ',
+    desc: '十の位・一の位ともに5枚まで。コインが多くなりすぎないよう抑えた設定です。',
+    range: '出題範囲：10〜55円（各位5枚まで）',
+    gen: () => makeNum(rand(1,5), rand(0,5))
+  },
+  {
+    lv: 3,
+    title: '59円まで',
+    desc: '十の位は5枚まで、一の位は最大9枚。一の位を読む力を伸ばすステップです。',
+    range: '出題範囲：10〜59円',
+    gen: () => makeNum(rand(1,5), rand(0,9))
+  },
+  {
+    lv: 4,
+    title: '2ケタ完全版',
+    desc: '10〜99円を全範囲出題。2ケタのお金を自在に読めるかの総仕上げです。',
+    range: '出題範囲：10〜99円',
+    gen: () => makeNum(rand(1,9), rand(0,9))
+  },
+  {
+    lv: 5,
+    title: '100円台・入門',
+    desc: '初めて100円玉が登場。十の位は0か1だけなので「百何円」「百十何円」の2パターンに集中できます。',
+    range: '出題範囲：100〜119円',
+    gen: () => makeNum3(1, rand(0,1), rand(0,9))
+  },
+  {
+    lv: 6,
+    title: '155円まで・少なめ',
+    desc: '100円玉1枚＋各位5枚まで。3ケタに慣れる最初の一歩として、コインの枚数を抑えた設定です。',
+    range: '出題範囲：100〜155円（十・一の位は5枚まで）',
+    gen: () => makeNum3(1, rand(0,5), rand(0,5))
+  },
+  {
+    lv: 7,
+    title: '159円まで',
+    desc: '百の位は1固定、十の位は5まで、一の位は最大9枚。3ケタの読みを本格的に練習するステップです。',
+    range: '出題範囲：100〜159円',
+    gen: () => makeNum3(1, rand(0,5), rand(0,9))
+  },
+  {
+    lv: 8,
+    title: '100円台完全版',
+    desc: '100〜199円を全範囲出題。百の位が1のお金をすべて読めるかの総仕上げです。',
+    range: '出題範囲：100〜199円',
+    gen: () => makeNum3(1, rand(0,9), rand(0,9))
+  },
+  {
+    lv: 9,
+    title: '何百円台・入門',
+    desc: '百の位が1〜9まで変わります。十の位は0か1だけに絞り、百の位の読み方に集中できる設定です。',
+    range: '出題範囲：100〜919円（十の位は0か1のみ）',
+    gen: () => makeNum3(rand(1,9), rand(0,1), rand(0,9))
+  },
+  {
+    lv: 10,
+    title: '何百円台・少なめ',
+    desc: '百の位は1〜9すべて登場。十・一の位は5枚まで抑えてあるので、コインが多くなりすぎません。',
+    range: '出題範囲：100〜955円（十・一の位は5枚まで）',
+    gen: () => makeNum3(rand(1,9), rand(0,5), rand(0,5))
+  },
+  {
+    lv: 11,
+    title: '何百円台・中級',
+    desc: '百の位1〜9、十の位は5まで、一の位は最大9枚。3ケタの読みが本格化するステップです。',
+    range: '出題範囲：100〜959円',
+    gen: () => makeNum3(rand(1,9), rand(0,5), rand(0,9))
+  },
+  {
+    lv: 12,
+    title: '3ケタ完全版',
+    desc: '100〜999円を全範囲出題。3ケタのお金をどれでも読めるかの総仕上げです。',
+    range: '出題範囲：100〜999円',
+    gen: () => makeNum3(rand(1,9), rand(0,9), rand(0,9))
+  },
+  {
+    lv: 13,
+    title: '🏆 チャンピオン',
+    desc: '1〜999円をランダム出題。さっき「何百円」だったと思ったら次は「何円」、その次はコインがたくさん…という変化球が連続する上級編です。',
+    range: '出題範囲：1〜999円（全範囲・バラバラ出題）',
+    gen: () => genChampion()
+  },
+];
 
-  function startGame() {
-    document.getElementById('startScreen').style.display = 'none';
-    nextProblem();
+// ===== 出題ロジック =====
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function range(min, max) {
+  const arr = [];
+  for (let i = min; i <= max; i++) arr.push(i);
+  return arr;
+}
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function makeNum(tens, ones) { return tens * 10 + ones; }
+function makeNum3(h, t, o) { return h * 100 + t * 10 + o; }
+
+let champPrev = -1;
+function genChampion() {
+  // 前回と桁が変わりやすくなるよう重み付き選択
+  const pools = [
+    range(1,9),          // 1ケタ
+    range(10,99),        // 2ケタ
+    range(100,999),      // 3ケタ
+  ];
+  // 前回の桁を判定
+  const prevDigit = champPrev < 10 ? 0 : champPrev < 100 ? 1 : 2;
+  // 違う桁を選びやすくする（70%で違う桁）
+  let pool;
+  if (Math.random() < 0.7) {
+    const others = [0,1,2].filter(i => i !== prevDigit);
+    pool = pools[pick(others)];
+  } else {
+    pool = pools[rand(0,2)];
   }
+  const n = pick(pool);
+  champPrev = n;
+  return n;
+}
 
-  function nextProblem() {
-    judging = false;
-    // 1〜999のランダム（0は除く）
-    currentNum = Math.floor(Math.random() * 999) + 1;
-    renderCoins(currentNum);
+// ===== 状態 =====
+let score = 0;
+let currentNum = 0;
+let judging = false;
+let currentLevel = null;
+let pendingLevel = null;
+
+// ===== 画面制御 =====
+function showLevelScreen() {
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('levelScreen').classList.add('show');
+}
+function hideLevelScreen() {
+  document.getElementById('levelScreen').classList.remove('show');
+  document.getElementById('titleScreen').style.display = 'flex';
+}
+
+function buildLevelList() {
+  const list = document.getElementById('levelList');
+  list.innerHTML = '';
+  LEVELS.forEach(lv => {
+    const item = document.createElement('div');
+    item.className = 'levelItem';
+    item.innerHTML = `
+      <div class="levelBadge${lv.lv === 13 ? ' champ' : ''}">${lv.lv === 13 ? '🏆' : lv.lv}</div>
+      <div class="levelItemText">
+        <div class="levelTitle">${lv.title}</div>
+        <div class="levelDesc">${lv.range}</div>
+      </div>
+      <div class="levelArrow">›</div>
+    `;
+    item.onclick = () => openLevelModal(lv);
+    list.appendChild(item);
+  });
+}
+
+function openLevelModal(lv) {
+  pendingLevel = lv;
+  document.getElementById('modalLv').textContent = lv.lv === 13 ? 'Level 13' : `Level ${lv.lv}`;
+  document.getElementById('modalTitle').textContent = lv.title;
+  document.getElementById('modalDesc').textContent = lv.desc;
+  document.getElementById('modalRange').textContent = lv.range;
+  document.getElementById('levelModal').classList.add('show');
+}
+function closeLevelModal(e) {
+  if (e.target === document.getElementById('levelModal')) closeModal();
+}
+function closeModal() {
+  document.getElementById('levelModal').classList.remove('show');
+}
+function startFromModal() {
+  closeModal();
+  document.getElementById('levelScreen').classList.remove('show');
+  startGame(pendingLevel);
+}
+
+// ===== ゲーム =====
+function startGame(lv) {
+  currentLevel = lv;
+  score = 0;
+  document.getElementById('scoreNum').textContent = '0';
+  document.getElementById('levelBadgeGame').textContent =
+    lv.lv === 13 ? '🏆 チャンピオン' : `Lv.${lv.lv}　${lv.title}`;
+  champPrev = -1;
+  nextProblem();
+}
+
+function nextProblem() {
+  judging = false;
+  let n;
+  // 0円は出さない（コインが全部空になる）
+  do { n = currentLevel.gen(); } while (n === 0);
+  currentNum = n;
+  renderCoins(currentNum);
+}
+
+function renderCoins(n) {
+  const h = Math.floor(n / 100);
+  const t = Math.floor((n % 100) / 10);
+  const o = n % 10;
+  fillTwoCols('stack100L', 'stack100R', h, 'money_100.png');
+  fillTwoCols('stack10L',  'stack10R',  t, 'money_10.png');
+  fillTwoCols('stack1L',   'stack1R',   o, 'money_1.png');
+}
+
+function fillTwoCols(leftId, rightId, count, img) {
+  const left  = document.getElementById(leftId);
+  const right = document.getElementById(rightId);
+  left.innerHTML = '';
+  right.innerHTML = '';
+  for (let i = 0; i < Math.min(count, 5); i++) left.appendChild(makeCoin(img));
+  for (let i = 0; i < Math.max(count - 5, 0); i++) right.appendChild(makeCoin(img));
+}
+function makeCoin(img) {
+  const el = document.createElement('img');
+  el.src = img; el.className = 'coinImg'; return el;
+}
+
+function judge(correct) {
+  if (judging || !currentLevel) return;
+  judging = true;
+  if (correct) {
+    score++;
+    document.getElementById('scoreNum').textContent = score;
+    showFeedback('⭕️');
+    spawnStars();
+    setTimeout(nextProblem, 900);
+  } else {
+    showFeedback('❌');
+    document.getElementById('coinArea').classList.add('shaking');
+    setTimeout(() => {
+      document.getElementById('coinArea').classList.remove('shaking');
+      document.getElementById('feedback').classList.remove('show');
+      judging = false;
+    }, 500);
   }
+}
 
-  function renderCoins(n) {
-    const h = Math.floor(n / 100);
-    const t = Math.floor((n % 100) / 10);
-    const o = n % 10;
-    fillTwoCols('stack100L', 'stack100R', h, 'money_100.png');
-    fillTwoCols('stack10L',  'stack10R',  t, 'money_10.png');
-    fillTwoCols('stack1L',   'stack1R',   o, 'money_1.png');
-  }
+function showFeedback(icon) {
+  const fb = document.getElementById('feedback');
+  document.getElementById('feedbackInner').textContent = icon;
+  fb.classList.add('show');
+  setTimeout(() => fb.classList.remove('show'), 700);
+}
 
-  function fillTwoCols(leftId, rightId, count, img) {
-    const left  = document.getElementById(leftId);
-    const right = document.getElementById(rightId);
-    left.innerHTML = '';
-    right.innerHTML = '';
-    const leftCount  = Math.min(count, 5);
-    const rightCount = Math.max(count - 5, 0);
-    for (let i = 0; i < leftCount; i++) {
-      left.appendChild(makeCoin(img));
-    }
-    for (let i = 0; i < rightCount; i++) {
-      right.appendChild(makeCoin(img));
-    }
-  }
+function spawnStars() {
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight * 0.6;
+  ['⭐','✨','🌟','⭐','✨'].forEach((s, i) => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'star'; el.textContent = s;
+      const angle = (i / 5) * Math.PI * 2;
+      el.style.setProperty('--dx', Math.cos(angle) * 100 + 'px');
+      el.style.setProperty('--dy', Math.sin(angle) * 100 + 'px');
+      el.style.left = cx + 'px'; el.style.top = cy + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 800);
+    }, i * 60);
+  });
+}
 
-  function makeCoin(img) {
-    const el = document.createElement('img');
-    el.src = img;
-    el.className = 'coinImg';
-    return el;
-  }
-
-  function judge(correct) {
-    if (judging) return;
-    judging = true;
-
-    if (correct) {
-      score++;
-      document.getElementById('scoreNum').textContent = score;
-      showFeedback('⭕️');
-      spawnStars();
-      setTimeout(nextProblem, 900);
-    } else {
-      showFeedback('❌');
-      document.getElementById('coinArea').classList.add('shaking');
-      setTimeout(() => {
-        document.getElementById('coinArea').classList.remove('shaking');
-        document.getElementById('feedback').classList.remove('show');
-        judging = false;
-      }, 500);
-    }
-  }
-
-  function showFeedback(icon) {
-    const fb = document.getElementById('feedback');
-    const inner = document.getElementById('feedbackInner');
-    inner.textContent = icon;
-    fb.classList.add('show');
-    setTimeout(() => fb.classList.remove('show'), 700);
-  }
-
-  function spawnStars() {
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight * 0.6;
-    ['⭐','✨','🌟','⭐','✨'].forEach((s, i) => {
-      setTimeout(() => {
-        const el = document.createElement('div');
-        el.className = 'star';
-        el.textContent = s;
-        const angle = (i / 5) * Math.PI * 2;
-        el.style.setProperty('--dx', Math.cos(angle) * 100 + 'px');
-        el.style.setProperty('--dy', Math.sin(angle) * 100 + 'px');
-        el.style.left = cx + 'px';
-        el.style.top  = cy + 'px';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 800);
-      }, i * 60);
-    });
-  }
+buildLevelList();
 </script>
 </body>
 </html>
